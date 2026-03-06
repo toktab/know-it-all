@@ -15,8 +15,9 @@ public class AiServiceRouter {
     private final CohereAiService cohereAiService;
 
     public AiService.GeneratedQuestion generateQuestion(AiProvider provider,
-                                                        String topic, int difficulty) {
-        return resolve(provider).generateQuestion(topic, difficulty);
+                                                        String topic, int difficulty,
+                                                        List<String> previousQuestions) {
+        return resolve(provider).generateQuestion(topic, difficulty, previousQuestions);
     }
 
     public List<String> getBreakdown(AiProvider provider,

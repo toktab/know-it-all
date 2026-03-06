@@ -49,8 +49,14 @@ public class GameService {
     public QuestionResponse getNextQuestion(Long sessionId, User user) {
         GameSession session = getSession(sessionId, user);
 
+        List<String> previousQuestions = questionRepository.findBySession(session)
+                .stream()
+                .map(QuizQuestion::getQuestionText)
+                .toList();
+
         AiService.GeneratedQuestion generated =
-                aiRouter.generateQuestion(session.getAiProvider(), session.getTopic(), session.getDifficulty());
+                aiRouter.generateQuestion(session.getAiProvider(), session.getTopic(),
+                        session.getDifficulty(), previousQuestions);
 
         QuizQuestion question = QuizQuestion.builder()
                 .session(session)

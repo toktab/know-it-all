@@ -28,8 +28,8 @@ public class GroqAiService implements AiService {
     private final JsonMapper objectMapper;
 
     @Override
-    public GeneratedQuestion generateQuestion(String topic, int difficulty) {
-        String prompt = buildQuestionPrompt(topic, difficulty);
+    public GeneratedQuestion generateQuestion(String topic, int difficulty, List<String> previousQuestions) {
+        String prompt = buildQuestionPrompt(topic, difficulty, previousQuestions);
         String raw = call(prompt);
         try {
             JsonNode node = objectMapper.readTree(clean(raw));
@@ -83,7 +83,15 @@ public class GroqAiService implements AiService {
         }
     }
 
-    private String buildQuestionPrompt(String topic, int difficulty) {
+    private String buildQuestionPrompt(String topic, int difficulty, List<String> previousQuestions) {
+        String avoidSection = previousQuestions == null || previousQuestions.isEmpty() ? "" : """
+
+                Already asked questions — do NOT repeat or rephrase any of these:
+                %s
+                """.formatted(previousQuestions.stream()
+                .map(q -> "- " + q)
+                .reduce("", (a, b) -> a + "\n" + b));
+
         return """
                 Generate a challenging and interesting quiz question about "%s" with difficulty %d/10.
 
@@ -94,13 +102,13 @@ public class GroqAiService implements AiService {
                 - Difficulty %d/10 means: %s
                 - Never repeat obvious or generic questions
                 - The player will type their answer in a text box — no multiple choice
-
+                %s
                 Respond ONLY with valid JSON, no markdown, no extra text:
                 {
                   "question": "...",
                   "correctAnswer": "..."
                 }
-                """.formatted(topic, difficulty, difficulty, difficultyHint(difficulty));
+                """.formatted(topic, difficulty, difficulty, difficultyHint(difficulty), avoidSection);
     }
 
     private String difficultyHint(int difficulty) {

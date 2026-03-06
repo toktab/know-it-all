@@ -17,15 +17,15 @@ public class GeminiAiService implements AiService {
     @Value("${ai.gemini.api-key:}")
     private String apiKey;
 
-    @Value("${ai.gemini.model:gemini-1.5-flash}")
+    @Value("${ai.gemini.model:gemini-2.0-flash}")
     private String model;
 
     private final RestTemplate restTemplate;
     private final JsonMapper objectMapper;
 
     @Override
-    public GeneratedQuestion generateQuestion(String topic, int difficulty) {
-        String prompt = buildQuestionPrompt(topic, difficulty);
+    public GeneratedQuestion generateQuestion(String topic, int difficulty, List<String> previousQuestions) {
+        String prompt = buildQuestionPrompt(topic, difficulty, previousQuestions);
         String raw = call(prompt);
         try {
             JsonNode node = objectMapper.readTree(clean(raw));
@@ -80,16 +80,39 @@ public class GeminiAiService implements AiService {
         }
     }
 
-    private String buildQuestionPrompt(String topic, int difficulty) {
+    private String buildQuestionPrompt(String topic, int difficulty, List<String> previousQuestions) {
+        String avoidSection = previousQuestions == null || previousQuestions.isEmpty() ? "" : """
+
+                Already asked questions — do NOT repeat or rephrase any of these:
+                %s
+                """.formatted(previousQuestions.stream()
+                .map(q -> "- " + q)
+                .reduce("", (a, b) -> a + "\n" + b));
+
         return """
-                Generate a quiz question about "%s" with difficulty %d/10.
-                The player will type their answer in a text box — no multiple choice.
+                Generate a challenging and interesting quiz question about "%s" with difficulty %d/10.
+
+                Rules:
+                - Do NOT ask "what is X" or "name this thing" type questions
+                - Ask about specific facts, concepts, history, comparisons, or how things work
+                - The question must have one clear, concise correct answer (1-5 words max)
+                - Difficulty %d/10 means: %s
+                - Never repeat obvious or generic questions
+                - The player will type their answer in a text box — no multiple choice
+                %s
                 Respond ONLY with valid JSON, no markdown, no extra text:
                 {
                   "question": "...",
                   "correctAnswer": "..."
                 }
-                """.formatted(topic, difficulty);
+                """.formatted(topic, difficulty, difficulty, difficultyHint(difficulty), avoidSection);
+    }
+
+    private String difficultyHint(int difficulty) {
+        if (difficulty <= 3) return "basic facts a beginner would know, but still interesting and specific";
+        if (difficulty <= 6) return "intermediate knowledge requiring some study or experience";
+        if (difficulty <= 8) return "advanced concepts that experts would know";
+        return "expert-level, highly specific, obscure facts";
     }
 
     private String buildBreakdownPrompt(String question, String userAnswer, String correctAnswer) {
