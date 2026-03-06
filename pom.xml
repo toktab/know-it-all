@@ -21,7 +21,7 @@
         <!-- Override Jackson BOM to patch GHSA-72hv-8253-57qq (async parser bypass).     -->
         <!-- Spring Boot 4 uses Jackson 3 (tools.jackson groupId), so this must be a      -->
         <!-- Jackson 3 version. The fix landed in 3.1.0. Do NOT use a 2.x version here.  -->
-        <jackson-bom.version>3.1.0</jackson-bom.version>
+<!--        <jackson-bom.version>3.1.0</jackson-bom.version>-->
     </properties>
 
     <dependencies>
