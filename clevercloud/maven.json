@@ -1,9 +1,5 @@
 {
-  "build": {
-    "type": "maven",
-    "goal": "package -DskipTests"
-  },
   "deploy": {
-    "jarName": "knowitall-0.0.1-SNAPSHOT.jar"
+    "goal": "yourgoal"
   }
 }
