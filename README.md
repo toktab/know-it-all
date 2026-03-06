@@ -19,14 +19,14 @@ An AI-powered quiz application built with Spring Boot 4. Pick any topic, choose 
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Backend | Spring Boot 4, Spring Security, Spring Data JPA |
-| Database | MySQL 8 |
-| Auth | JWT (jjwt 0.12.6) |
-| AI | Groq (LLaMA 3.3 70B), Gemini 2.0 Flash, Cohere Command R+ |
-| Frontend | Vanilla HTML/CSS/JS (served as static files) |
-| Build | Maven |
+| Layer | Technology                                                       |
+|---|------------------------------------------------------------------|
+| Backend | Spring Boot 4, Spring Security, Spring Data JPA                  |
+| Database | MySQL 8                                                          |
+| Auth | JWT (jjwt 0.12.6)                                                |
+| AI | Groq (LLaMA 3.3 70B), Gemini 2.0 Flash, cohere command-a-03-2025 |
+| Frontend | Vanilla HTML/CSS/JS (served as static files)                     |
+| Build | Maven                                                            |
 
 ---
 
