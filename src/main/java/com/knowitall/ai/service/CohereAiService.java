@@ -17,7 +17,7 @@ public class CohereAiService implements AiService {
     @Value("${ai.cohere.api-key:}")
     private String apiKey;
 
-    @Value("${ai.cohere.model:command-r-plus}")
+    @Value("${ai.cohere.model:command-a-03-2025}")
     private String model;
 
     private static final String API_URL = "https://api.cohere.com/v2/chat";

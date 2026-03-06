@@ -37,6 +37,7 @@
         .provider-card { background:var(--bg); border:2px solid var(--border); border-radius:12px; padding:14px 12px; cursor:pointer; text-align:center; transition:border-color 0.2s,background 0.2s; }
         .provider-card:hover { border-color:var(--accent); }
         .provider-card.selected { border-color:var(--accent); background:rgba(124,92,252,0.08); }
+        .provider-card.disabled { opacity:0.45; cursor:not-allowed; pointer-events:none; }
         .provider-icon { font-size:22px; margin-bottom:6px; }
         .provider-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; }
         .provider-model { font-size:11px; color:var(--muted); margin-top:2px; }
@@ -91,14 +92,14 @@
         </div>
         <div class="provider-label">Choose your AI opponent</div>
         <div class="providers">
-            <div class="provider-card selected" id="card-GEMINI" onclick="selectProvider('GEMINI')">
+            <div class="provider-card disabled" id="card-GEMINI" title="Gemini is currently unavailable">
                 <div class="provider-icon">🔵</div>
                 <div class="provider-name">Gemini</div>
-                <div class="provider-model">gemini-1.5-flash</div>
-                <div class="provider-badge">Free</div>
+                <div class="provider-model">gemini-2.0-flash</div>
+                <div class="provider-badge" style="background:rgba(248,113,113,0.12);color:var(--error);">Out of Order</div>
             </div>
-            <div class="provider-card" id="card-GROQ" onclick="selectProvider('GROQ')">
-                <div class="provider-icon">⚡</div>
+            <div class="provider-card selected" id="card-GROQ" onclick="selectProvider('GROQ')">
+            <div class="provider-icon">⚡</div>
                 <div class="provider-name">Groq</div>
                 <div class="provider-model">llama-3.3-70b-versatile</div>
                 <div class="provider-badge">Free</div>
@@ -106,7 +107,7 @@
             <div class="provider-card" id="card-COHERE" onclick="selectProvider('COHERE')">
                 <div class="provider-icon">🟠</div>
                 <div class="provider-name">Cohere</div>
-                <div class="provider-model">command-r-plus</div>
+                <div class="provider-model">command-a-03-2025</div>
                 <div class="provider-badge">Free Trial</div>
             </div>
         </div>
@@ -122,7 +123,7 @@
     document.getElementById('greet').textContent = username;
     document.getElementById('navUser').textContent = username;
 
-    let selectedProvider = 'GEMINI';
+    let selectedProvider = 'GROQ';
 
     function selectProvider(p) {
         selectedProvider = p;
