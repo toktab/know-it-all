@@ -1,8 +1,7 @@
 package com.knowitall.game.service;
 
 import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.knowitall.ai.service.AiService;
 import com.knowitall.ai.service.AiServiceRouter;
 import com.knowitall.game.dto.*;
@@ -27,7 +26,7 @@ public class GameService {
     private final QuizQuestionRepository questionRepository;
     private final AiServiceRouter aiRouter;
     private final UserService userService;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper objectMapper;
 
     @Transactional
     public GameSessionResponse startGame(User user, StartGameRequest request) {

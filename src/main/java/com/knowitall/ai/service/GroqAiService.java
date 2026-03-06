@@ -1,7 +1,7 @@
 package com.knowitall.ai.service;
 
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -23,7 +23,7 @@ public class GroqAiService implements AiService {
     private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper objectMapper;
 
     @Override
     public GeneratedQuestion generateQuestion(String topic, int difficulty) {
