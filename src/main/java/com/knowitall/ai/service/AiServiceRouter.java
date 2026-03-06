@@ -20,9 +20,8 @@ public class AiServiceRouter {
     }
 
     public List<String> getBreakdown(AiProvider provider,
-                                     String question, String userAnswer,
-                                     String correctAnswer, String correctAnswerText) {
-        return resolve(provider).getBreakdown(question, userAnswer, correctAnswer, correctAnswerText);
+                                     String question, String userAnswer, String correctAnswer) {
+        return resolve(provider).getBreakdown(question, userAnswer, correctAnswer);
     }
 
     private AiService resolve(AiProvider provider) {

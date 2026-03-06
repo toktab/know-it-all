@@ -33,12 +33,7 @@ public class CohereAiService implements AiService {
             JsonNode node = objectMapper.readTree(clean(raw));
             return new GeneratedQuestion(
                     node.get("question").asString(),
-                    node.get("optionA").asString(),
-                    node.get("optionB").asString(),
-                    node.get("optionC").asString(),
-                    node.get("optionD").asString(),
                     node.get("correctAnswer").asString(),
-                    node.get("correctAnswerText").asString(),
                     prompt, raw
             );
         } catch (Exception e) {
@@ -47,9 +42,8 @@ public class CohereAiService implements AiService {
     }
 
     @Override
-    public List<String> getBreakdown(String question, String userAnswer,
-                                     String correctAnswer, String correctAnswerText) {
-        String prompt = buildBreakdownPrompt(question, userAnswer, correctAnswer, correctAnswerText);
+    public List<String> getBreakdown(String question, String userAnswer, String correctAnswer) {
+        String prompt = buildBreakdownPrompt(question, userAnswer, correctAnswer);
         String raw = call(prompt);
         try {
             JsonNode node = objectMapper.readTree(clean(raw));
@@ -57,7 +51,7 @@ public class CohereAiService implements AiService {
             for (JsonNode r : node.get("reasons")) reasons.add(r.asString());
             return reasons;
         } catch (Exception e) {
-            return List.of("Correct answer: " + correctAnswer + " — " + correctAnswerText);
+            return List.of("Correct answer: " + correctAnswer);
         }
     }
 
@@ -66,7 +60,6 @@ public class CohereAiService implements AiService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
 
-        // Cohere v2 chat format
         Map<String, Object> body = Map.of(
                 "model", model,
                 "messages", List.of(Map.of("role", "user", "content", prompt))
@@ -76,7 +69,6 @@ public class CohereAiService implements AiService {
             ResponseEntity<Map> response = restTemplate.postForEntity(
                     API_URL, new HttpEntity<>(body, headers), Map.class);
 
-            // Response: { message: { content: [ { type: "text", text: "..." } ] } }
             Map<String, Object> message =
                     (Map<String, Object>) response.getBody().get("message");
             List<Map<String, Object>> content =
@@ -89,31 +81,26 @@ public class CohereAiService implements AiService {
 
     private String buildQuestionPrompt(String topic, int difficulty) {
         return """
-                Generate a multiple-choice quiz question about "%s" with difficulty %d/10.
+                Generate a quiz question about "%s" with difficulty %d/10.
+                The player will type their answer in a text box — no multiple choice.
                 Respond ONLY with valid JSON, no markdown, no extra text:
                 {
                   "question": "...",
-                  "optionA": "...",
-                  "optionB": "...",
-                  "optionC": "...",
-                  "optionD": "...",
-                  "correctAnswer": "A",
-                  "correctAnswerText": "..."
+                  "correctAnswer": "..."
                 }
                 """.formatted(topic, difficulty);
     }
 
-    private String buildBreakdownPrompt(String question, String userAnswer,
-                                        String correctAnswer, String correctAnswerText) {
+    private String buildBreakdownPrompt(String question, String userAnswer, String correctAnswer) {
         return """
                 A student answered a quiz question incorrectly.
                 Question: %s
                 Student answered: %s
-                Correct answer: %s — %s
+                Correct answer: %s
                 Give 2 to 4 short, clear reasons why the student was wrong.
                 Respond ONLY with valid JSON, no markdown:
                 { "reasons": ["reason 1", "reason 2"] }
-                """.formatted(question, userAnswer, correctAnswer, correctAnswerText);
+                """.formatted(question, userAnswer, correctAnswer);
     }
 
     private String clean(String raw) {
