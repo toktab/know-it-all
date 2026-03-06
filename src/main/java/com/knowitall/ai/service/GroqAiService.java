@@ -1,5 +1,6 @@
 package com.knowitall.ai.service;
 
+import org.springframework.context.annotation.Primary;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
+@Primary
 @Service
 @RequiredArgsConstructor
 public class GroqAiService implements AiService {
@@ -17,7 +19,7 @@ public class GroqAiService implements AiService {
     @Value("${ai.groq.api-key:}")
     private String apiKey;
 
-    @Value("${ai.groq.model:llama3-8b-8192}")
+    @Value("${ai.groq.model:llama-3.3-70b-versatile}")
     private String model;
 
     private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
@@ -83,14 +85,29 @@ public class GroqAiService implements AiService {
 
     private String buildQuestionPrompt(String topic, int difficulty) {
         return """
-                Generate a quiz question about "%s" with difficulty %d/10.
-                The player will type their answer in a text box — no multiple choice.
+                Generate a challenging and interesting quiz question about "%s" with difficulty %d/10.
+
+                Rules:
+                - Do NOT ask "what is X" or "name this thing" type questions
+                - Ask about specific facts, concepts, history, comparisons, or how things work
+                - The question must have one clear, concise correct answer (1-5 words max)
+                - Difficulty %d/10 means: %s
+                - Never repeat obvious or generic questions
+                - The player will type their answer in a text box — no multiple choice
+
                 Respond ONLY with valid JSON, no markdown, no extra text:
                 {
                   "question": "...",
                   "correctAnswer": "..."
                 }
-                """.formatted(topic, difficulty);
+                """.formatted(topic, difficulty, difficulty, difficultyHint(difficulty));
+    }
+
+    private String difficultyHint(int difficulty) {
+        if (difficulty <= 3) return "basic facts a beginner would know, but still interesting and specific";
+        if (difficulty <= 6) return "intermediate knowledge requiring some study or experience";
+        if (difficulty <= 8) return "advanced concepts that experts would know";
+        return "expert-level, highly specific, obscure facts";
     }
 
     private String buildBreakdownPrompt(String question, String userAnswer, String correctAnswer) {
