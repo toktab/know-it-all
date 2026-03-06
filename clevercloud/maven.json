@@ -4,6 +4,6 @@
     "goal": "package -DskipTests"
   },
   "deploy": {
-    "jarName": "knowitall-0.0.1-SNAPSHOT"
+    "jarName": "knowitall-0.0.1-SNAPSHOT.jar"
   }
 }
