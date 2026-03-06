@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    <title>Know-It-All — History</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0a0a0f; --surface:#12121a; --border:#1e1e2e; --accent:#7c5cfc; --accent2:#c084fc; --text:#e2e0ff; --muted:#6b6a8a; --success:#4ade80; --error:#f87171; --warn:#fbbf24; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
+        nav { display:flex; align-items:center; justify-content:space-between; padding:14px 40px; border-bottom:1px solid var(--border); background:rgba(10,10,15,0.9); backdrop-filter:blur(10px); position:sticky; top:0; z-index:10; }
+        .logo { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .btn-sm { background:transparent; border:1px solid var(--border); color:var(--muted); padding:6px 14px; border-radius:8px; cursor:pointer; font-size:13px; font-family:inherit; transition:all 0.2s; }
+        .btn-sm:hover { border-color:var(--accent); color:var(--accent); }
+        main { max-width:760px; margin:0 auto; padding:40px 24px; }
+        .back { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:13px; cursor:pointer; margin-bottom:24px; transition:color 0.2s; }
+        .back:hover { color:var(--text); }
+        .session-header { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:24px 28px; margin-bottom:24px; }
+        .sh-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
+        .sh-topic { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; }
+        .sh-score { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .sh-meta { display:flex; gap:20px; flex-wrap:wrap; }
+        .sh-stat { font-size:13px; color:var(--muted); }
+        .sh-stat span { color:var(--text); font-weight:600; }
+        .badge { display:inline-block; font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; margin-left:8px; }
+        .easy { background:rgba(74,222,128,0.12); color:var(--success); }
+        .mid  { background:rgba(251,191,36,0.12); color:var(--warn); }
+        .hard { background:rgba(248,113,113,0.12); color:var(--error); }
+        .provider-tag { display:inline-flex; align-items:center; gap:5px; background:rgba(124,92,252,0.1); border:1px solid rgba(124,92,252,0.2); border-radius:20px; padding:3px 10px; font-size:12px; color:var(--accent2); margin-top:8px; }
+        .section-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:14px; }
+        .q-list { display:flex; flex-direction:column; gap:12px; }
+        .q-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; }
+        .q-card.correct { border-left:3px solid var(--success); }
+        .q-card.wrong   { border-left:3px solid var(--error); }
+        .q-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+        .q-num { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; }
+        .q-badge-correct { background:rgba(74,222,128,0.12); color:var(--success); font-size:11px; font-weight:600; padding:2px 10px; border-radius:20px; }
+        .q-badge-wrong   { background:rgba(248,113,113,0.12); color:var(--error);   font-size:11px; font-weight:600; padding:2px 10px; border-radius:20px; }
+        .q-text { font-size:15px; font-weight:600; margin-bottom:12px; line-height:1.45; }
+        .q-answers { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+        .q-answer { font-size:13px; padding:8px 12px; border-radius:8px; }
+        .q-answer.user-correct { background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.2); }
+        .q-answer.user-wrong   { background:rgba(248,113,113,0.08); border:1px solid rgba(248,113,113,0.2); }
+        .q-answer.correct-ans  { background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.2); }
+        .q-answer-label { font-size:11px; color:var(--muted); margin-bottom:2px; }
+        .q-time { font-size:11px; color:var(--muted); margin-bottom:10px; }
+        .bd-title { font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin-bottom:6px; margin-top:10px; }
+        .bd-item { display:flex; gap:8px; font-size:12px; background:rgba(248,113,113,0.05); border:1px solid rgba(248,113,113,0.12); border-radius:7px; padding:7px 10px; margin-bottom:5px; }
+        .bd-item::before { content:'→'; color:var(--error); flex-shrink:0; }
+        .loading { text-align:center; padding:60px; color:var(--muted); }
+        .spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; margin:0 auto 14px; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        .empty { text-align:center; color:var(--muted); padding:40px; }
+    </style>
+</head>
+<body>
+<nav>
+    <div class="logo">⚡ Know-It-All</div>
+    <button class="btn-sm" onclick="location.href='/dashboard.html'">← Dashboard</button>
+</nav>
+<main>
+    <div id="loadView" class="loading"><div class="spinner"></div><div>Loading session...</div></div>
+    <div id="mainView" style="display:none">
+        <div class="back" onclick="location.href='/dashboard.html'">← Back to Dashboard</div>
+        <div class="session-header">
+            <div class="sh-top">
+                <div>
+                    <div class="sh-topic" id="shTopic">—</div>
+                    <div class="provider-tag" id="shProvider"></div>
+                </div>
+                <div class="sh-score" id="shScore">0 pts</div>
+            </div>
+            <div class="sh-meta">
+                <div class="sh-stat">Difficulty <span id="shDiff">—</span></div>
+                <div class="sh-stat">Questions <span id="shQ">—</span></div>
+                <div class="sh-stat">Correct <span id="shC">—</span></div>
+                <div class="sh-stat">Accuracy <span id="shAcc">—</span></div>
+                <div class="sh-stat">Date <span id="shDate">—</span></div>
+            </div>
+        </div>
+        <div class="section-title">Question Breakdown</div>
+        <div class="q-list" id="qList"><div class="empty">No questions recorded.</div></div>
+    </div>
+</main>
+<script>
+    const token = localStorage.getItem('token');
+    if (!token) location.href = '/index.html';
+    const sessionId = localStorage.getItem('viewSession');
+    if (!sessionId) location.href = '/dashboard.html';
+
+    const providerIcons = { GEMINI:'🔵', GROQ:'⚡', COHERE:'🟠' };
+
+    async function load() {
+        const res = await fetch(`/api/game/history/${sessionId}`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (res.status === 401) { localStorage.clear(); location.href='/index.html'; return; }
+        const s = await res.json();
+        if (s.error) { alert(s.error); location.href='/dashboard.html'; return; }
+
+        const d = s.difficulty;
+        const cls = d<=3?'easy':d<=6?'mid':'hard';
+        const lbl = d<=3?'Easy':d<=6?'Medium':'Hard';
+        const acc = s.questionsAsked > 0 ? Math.round(s.correctAnswers / s.questionsAsked * 100) : 0;
+        const icon = providerIcons[s.aiProvider] || '🤖';
+
+        document.getElementById('shTopic').innerHTML =
+            `${s.topic} <span class="badge ${cls}">${lbl}</span>`;
+        document.getElementById('shProvider').innerHTML =
+            `${icon} ${s.aiProvider || 'AI'}`;
+        document.getElementById('shScore').textContent  = `${s.score} pts`;
+        document.getElementById('shDiff').textContent   = `${s.difficulty}/10`;
+        document.getElementById('shQ').textContent      = s.questionsAsked;
+        document.getElementById('shC').textContent      = s.correctAnswers;
+        document.getElementById('shAcc').textContent    = `${acc}%`;
+        document.getElementById('shDate').textContent   =
+            s.startedAt ? new Date(s.startedAt).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}) : '—';
+
+        const qList = document.getElementById('qList');
+        if (!s.questions || !s.questions.length) {
+            qList.innerHTML = '<div class="empty">No questions recorded.</div>';
+        } else {
+            qList.innerHTML = s.questions.map((q, i) => {
+                const correct = q.isCorrect;
+                const bd = q.breakdown && q.breakdown.length
+                    ? `<div class="bd-title">Why you were wrong:</div>` +
+                      q.breakdown.map(r => `<div class="bd-item">${r}</div>`).join('')
+                    : '';
+                const userCls = correct ? 'user-correct' : 'user-wrong';
+                const correctBlock = !correct
+                    ? `<div class="q-answer correct-ans">
+                          <div class="q-answer-label">✅ Correct answer</div>
+                          ${q.correctAnswer}
+                       </div>`
+                    : '';
+                return `
+                <div class="q-card ${correct?'correct':'wrong'}">
+                    <div class="q-top">
+                        <div class="q-num">Question ${i+1}</div>
+                        <div class="${correct?'q-badge-correct':'q-badge-wrong'}">${correct?'✓ Correct':'✗ Wrong'}</div>
+                    </div>
+                    <div class="q-text">${q.questionText}</div>
+                    <div class="q-answers">
+                        <div class="q-answer ${userCls}">
+                            <div class="q-answer-label">${correct?'✅':'❌'} Your answer</div>
+                            ${q.userAnswer || '(no answer)'}
+                        </div>
+                        ${correctBlock}
+                    </div>
+                    <div class="q-time">⏱ ${q.timeTakenSeconds ?? '—'}s taken</div>
+                    ${bd}
+                </div>`;
+            }).join('');
+        }
+
+        document.getElementById('loadView').style.display = 'none';
+        document.getElementById('mainView').style.display = 'block';
+    }
+
+    load();
+</script>
+</body>
+</html>
