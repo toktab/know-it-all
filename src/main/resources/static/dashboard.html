@@ -32,6 +32,15 @@
         input[type=range] { width:100%; accent-color:var(--accent); margin-top:4px; cursor:pointer; }
         .diff-val { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; color:var(--accent); margin-bottom:4px; }
         .diff-row { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:4px; }
+        .provider-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px; }
+        .providers { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
+        .provider-card { background:var(--bg); border:2px solid var(--border); border-radius:12px; padding:14px 12px; cursor:pointer; text-align:center; transition:border-color 0.2s,background 0.2s; }
+        .provider-card:hover { border-color:var(--accent); }
+        .provider-card.selected { border-color:var(--accent); background:rgba(124,92,252,0.08); }
+        .provider-icon { font-size:22px; margin-bottom:6px; }
+        .provider-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; }
+        .provider-model { font-size:11px; color:var(--muted); margin-top:2px; }
+        .provider-badge { display:inline-block; font-size:10px; font-weight:600; padding:1px 7px; border-radius:20px; margin-top:5px; background:rgba(74,222,128,0.12); color:var(--success); }
         .btn-start { width:100%; padding:15px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; border-radius:12px; color:#fff; font-size:16px; font-weight:700; font-family:'Syne',sans-serif; cursor:pointer; transition:opacity 0.2s,transform 0.15s; }
         .btn-start:hover { opacity:0.9; transform:translateY(-1px); }
         .history-list { display:flex; flex-direction:column; gap:10px; }
@@ -39,7 +48,9 @@
         .h-item:hover { border-color:var(--accent); }
         .h-topic { font-weight:600; font-size:14px; }
         .h-meta { font-size:12px; color:var(--muted); margin-top:2px; }
+        .h-right { text-align:right; }
         .h-score { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .h-provider { font-size:11px; color:var(--muted); margin-top:2px; }
         .badge { display:inline-block; font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; margin-left:6px; }
         .easy { background:rgba(74,222,128,0.12); color:var(--success); }
         .mid  { background:rgba(251,191,36,0.12); color:var(--warn); }
@@ -57,14 +68,12 @@
 </nav>
 <main>
     <h1>Welcome back, <span id="greet">player</span>!</h1>
-    <div class="sub">Pick a topic, set the difficulty, and test your knowledge.</div>
-
+    <div class="sub">Pick a topic, choose your AI, set the difficulty, and test your knowledge.</div>
     <div class="stats">
         <div class="stat"><div class="stat-val" id="sScore">—</div><div class="stat-lbl">Total Score</div></div>
         <div class="stat"><div class="stat-val" id="sGames">—</div><div class="stat-lbl">Games Played</div></div>
         <div class="stat"><div class="stat-val" id="sBest">—</div><div class="stat-lbl">Best Score</div></div>
     </div>
-
     <div class="card">
         <div class="section-title">🎮 Start New Game</div>
         <div class="form-row">
@@ -76,17 +85,36 @@
                 <label>Difficulty — <span id="diffVal">5</span>/10</label>
                 <div class="diff-val" id="diffBig">5</div>
                 <input type="range" id="diff" min="0" max="10" value="5"
-                       oninput="document.getElementById('diffVal').textContent=this.value; document.getElementById('diffBig').textContent=this.value;"/>
+                       oninput="document.getElementById('diffVal').textContent=this.value;document.getElementById('diffBig').textContent=this.value;"/>
                 <div class="diff-row"><span>Easy</span><span>Medium</span><span>Hard</span></div>
+            </div>
+        </div>
+        <div class="provider-label">Choose your AI opponent</div>
+        <div class="providers">
+            <div class="provider-card selected" id="card-GEMINI" onclick="selectProvider('GEMINI')">
+                <div class="provider-icon">🔵</div>
+                <div class="provider-name">Gemini</div>
+                <div class="provider-model">gemini-1.5-flash</div>
+                <div class="provider-badge">Free</div>
+            </div>
+            <div class="provider-card" id="card-GROQ" onclick="selectProvider('GROQ')">
+                <div class="provider-icon">⚡</div>
+                <div class="provider-name">Groq</div>
+                <div class="provider-model">llama3-8b-8192</div>
+                <div class="provider-badge">Free</div>
+            </div>
+            <div class="provider-card" id="card-COHERE" onclick="selectProvider('COHERE')">
+                <div class="provider-icon">🟠</div>
+                <div class="provider-name">Cohere</div>
+                <div class="provider-model">command-r-plus</div>
+                <div class="provider-badge">Free Trial</div>
             </div>
         </div>
         <button class="btn-start" onclick="startGame()">Start Game ⚡</button>
     </div>
-
     <div class="section-title">📜 Recent Games</div>
     <div class="history-list" id="historyList"><div class="empty">Loading...</div></div>
 </main>
-
 <script>
     const token = localStorage.getItem('token');
     if (!token) location.href = '/index.html';
@@ -94,49 +122,65 @@
     document.getElementById('greet').textContent = username;
     document.getElementById('navUser').textContent = username;
 
+    let selectedProvider = 'GEMINI';
+
+    function selectProvider(p) {
+        selectedProvider = p;
+        document.querySelectorAll('.provider-card').forEach(c => c.classList.remove('selected'));
+        document.getElementById('card-' + p).classList.add('selected');
+    }
+
     async function api(path) {
-      const res = await fetch(path, { headers: {'Authorization':'Bearer '+token} });
-      if (res.status === 401) { logout(); return null; }
-      return res.json();
+        const res = await fetch(path, { headers: {'Authorization':'Bearer '+token} });
+        if (res.status === 401) { logout(); return null; }
+        return res.json();
     }
 
     async function loadUser() {
-      const d = await api('/api/users/me');
-      if (!d) return;
-      document.getElementById('sScore').textContent = d.totalScore.toLocaleString();
-      document.getElementById('sGames').textContent = d.gamesPlayed;
+        const d = await api('/api/users/me');
+        if (!d) return;
+        document.getElementById('sScore').textContent = d.totalScore.toLocaleString();
+        document.getElementById('sGames').textContent = d.gamesPlayed;
     }
 
+    const providerIcons = { GEMINI:'🔵', GROQ:'⚡', COHERE:'🟠' };
+
     async function loadHistory() {
-      const data = await api('/api/game/history');
-      const el = document.getElementById('historyList');
-      if (!data || !data.length) { el.innerHTML = '<div class="empty">No games yet — start your first one above!</div>'; return; }
-      let best = 0;
-      el.innerHTML = data.slice(0,10).map(s => {
-        if (s.score > best) best = s.score;
-        const d = s.difficulty;
-        const cls = d<=3?'easy':d<=6?'mid':'hard';
-        const lbl = d<=3?'Easy':d<=6?'Medium':'Hard';
-        const acc = s.questionsAsked>0 ? Math.round(s.correctAnswers/s.questionsAsked*100) : 0;
-        return `<div class="h-item" onclick="viewSession(${s.sessionId})">
-          <div><div class="h-topic">${s.topic}<span class="badge ${cls}">${lbl}</span></div>
-          <div class="h-meta">${s.questionsAsked} questions · ${acc}% accuracy · ${fmtDate(s.startedAt)}</div></div>
-          <div class="h-score">${s.score} pts</div></div>`;
-      }).join('');
-      document.getElementById('sBest').textContent = best > 0 ? best.toLocaleString() : '—';
+        const data = await api('/api/game/history');
+        const el = document.getElementById('historyList');
+        if (!data || !data.length) { el.innerHTML = '<div class="empty">No games yet — start your first one above!</div>'; return; }
+        let best = 0;
+        el.innerHTML = data.slice(0,10).map(s => {
+            if (s.score > best) best = s.score;
+            const d = s.difficulty;
+            const cls = d<=3?'easy':d<=6?'mid':'hard';
+            const lbl = d<=3?'Easy':d<=6?'Medium':'Hard';
+            const acc = s.questionsAsked>0 ? Math.round(s.correctAnswers/s.questionsAsked*100) : 0;
+            const icon = providerIcons[s.aiProvider] || '🤖';
+            return `<div class="h-item" onclick="viewSession(${s.sessionId})">
+              <div>
+                <div class="h-topic">${s.topic}<span class="badge ${cls}">${lbl}</span></div>
+                <div class="h-meta">${s.questionsAsked} questions · ${acc}% accuracy · ${fmtDate(s.startedAt)}</div>
+              </div>
+              <div class="h-right">
+                <div class="h-score">${s.score} pts</div>
+                <div class="h-provider">${icon} ${s.aiProvider||''}</div>
+              </div>
+            </div>`;
+        }).join('');
+        document.getElementById('sBest').textContent = best > 0 ? best.toLocaleString() : '—';
     }
 
     function fmtDate(iso) { return iso ? new Date(iso).toLocaleDateString(undefined,{month:'short',day:'numeric'}) : ''; }
-
     function startGame() {
-      const topic = document.getElementById('topic').value.trim();
-      const difficulty = document.getElementById('diff').value;
-      if (!topic) { alert('Please enter a topic!'); return; }
-      localStorage.setItem('gameTopic', topic);
-      localStorage.setItem('gameDiff', difficulty);
-      location.href = '/game.html';
+        const topic = document.getElementById('topic').value.trim();
+        const difficulty = document.getElementById('diff').value;
+        if (!topic) { alert('Please enter a topic!'); return; }
+        localStorage.setItem('gameTopic', topic);
+        localStorage.setItem('gameDiff', difficulty);
+        localStorage.setItem('gameProvider', selectedProvider);
+        location.href = '/game.html';
     }
-
     function viewSession(id) { localStorage.setItem('viewSession', id); location.href = '/history.html'; }
     function logout() { localStorage.clear(); location.href = '/index.html'; }
 
