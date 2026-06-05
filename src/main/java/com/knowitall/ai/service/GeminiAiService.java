@@ -81,49 +81,84 @@ public class GeminiAiService implements AiService {
     }
 
     private String buildQuestionPrompt(String topic, int difficulty, List<String> previousQuestions) {
-        String avoidSection = previousQuestions == null || previousQuestions.isEmpty() ? "" : """
+        String avoidSection = (previousQuestions == null || previousQuestions.isEmpty()) ? "" : """
 
-                Already asked questions — do NOT repeat or rephrase any of these:
+                ══ QUESTIONS ALREADY ASKED — DO NOT REPEAT OR REPHRASE ANY OF THESE ══
                 %s
+                ══════════════════════════════════════════════════════════════════════
                 """.formatted(previousQuestions.stream()
-                .map(q -> "- " + q)
+                .map(q -> "  • " + q)
                 .reduce("", (a, b) -> a + "\n" + b));
 
         return """
-                Generate a challenging and interesting quiz question about "%s" with difficulty %d/10.
+                You are a quiz question generator for a trivia game. Your job is to produce ONE high-quality quiz question.
 
-                Rules:
-                - Do NOT ask "what is X" or "name this thing" type questions
-                - Ask about specific facts, concepts, history, comparisons, or how things work
-                - The question must have one clear, concise correct answer (1-5 words max)
-                - Difficulty %d/10 means: %s
-                - Never repeat obvious or generic questions
-                - The player will type their answer in a text box — no multiple choice
+                ════════════════════════════════════════
+                TOPIC: "%s"
+                DIFFICULTY: %d out of 10
+                ════════════════════════════════════════
+
+                ── WHAT THE DIFFICULTY LEVELS MEAN ──────────────────────────────────
+                1–3  (Easy)    : A curious beginner could answer this after light reading.
+                               Example topic "Astronomy" → "What is the closest star to Earth?" → "Sun"
+                4–6  (Medium)  : Requires genuine study or real interest in the topic.
+                               Example topic "Astronomy" → "What year did Voyager 1 leave the solar system?" → "2012"
+                7–9  (Hard)    : Expert-level. Only enthusiasts or specialists would know this.
+                               Example topic "Astronomy" → "What is the Chandrasekhar limit?" → "1.4 solar masses"
+                10   (Expert)  : Obscure, specific, and punishing. Almost nobody gets this right.
+                               Example topic "Astronomy" → "What is the name of the radio signal detected by Big Ear in 1977?" → "Wow signal"
+
+                ── STRICT RULES FOR THE QUESTION ────────────────────────────────────
+                ✅ DO:
+                  - Ask about a specific fact, mechanism, historical event, comparison, origin, record, or consequence
+                  - Make the question genuinely interesting and surprising — something a player will find rewarding to learn
+                  - Ensure there is ONE and only ONE correct answer
+                  - The answer must be SHORT: 1 to 5 words maximum (a name, number, place, term, or date)
+                  - Scale specificity and obscurity to the difficulty level
+
+                ❌ DO NOT:
+                  - Ask "What is X?" or "What does X stand for?" or "Name the X" — these are boring definition questions
+                  - Ask "Who invented/discovered X?" for famous inventors (too generic)
+                  - Ask questions where the answer could be multiple things (ambiguous)
+                  - Ask questions where the answer is a long sentence or explanation
+                  - Ask questions that require opinion or estimation
+                  - Use multiple choice — the player types a free-text answer
                 %s
-                Respond ONLY with valid JSON, no markdown, no extra text:
-                {
-                  "question": "...",
-                  "correctAnswer": "..."
-                }
-                """.formatted(topic, difficulty, difficulty, difficultyHint(difficulty), avoidSection);
-    }
+                ── OUTPUT FORMAT ────────────────────────────────────────────────────
+                Respond with ONLY a JSON object. No markdown fences, no extra text, no commentary.
+                The JSON must have exactly these two keys:
 
-    private String difficultyHint(int difficulty) {
-        if (difficulty <= 3) return "basic facts a beginner would know, but still interesting and specific";
-        if (difficulty <= 6) return "intermediate knowledge requiring some study or experience";
-        if (difficulty <= 8) return "advanced concepts that experts would know";
-        return "expert-level, highly specific, obscure facts";
+                {
+                  "question": "Your question here?",
+                  "correctAnswer": "Short answer here"
+                }
+
+                The "correctAnswer" must be the minimal correct answer a player would type.
+                Do NOT include articles like "The" unless they are essential (e.g., "The Beatles" is fine, "The Sun" should just be "Sun").
+                """.formatted(topic, difficulty, avoidSection);
     }
 
     private String buildBreakdownPrompt(String question, String userAnswer, String correctAnswer) {
         return """
-                A student answered a quiz question incorrectly.
-                Question: %s
-                Student answered: %s
-                Correct answer: %s
-                Give 2 to 4 short, clear reasons why the student was wrong.
-                Respond ONLY with valid JSON, no markdown:
-                { "reasons": ["reason 1", "reason 2"] }
+                A player just answered a quiz question incorrectly. Your job is to explain why they were wrong
+                in a way that is educational, specific, and helpful — not generic or condescending.
+
+                ════════════════════════════════════════
+                QUESTION    : %s
+                PLAYER SAID : %s
+                CORRECT ANS : %s
+                ════════════════════════════════════════
+
+                Write 2 to 4 short reasons that explain the mistake. Each reason should:
+                  - Be specific to THIS question and answer — not generic advice like "read more carefully"
+                  - Teach the player something real about why the correct answer is what it is
+                  - Be written in plain English, 1–2 sentences max per reason
+                  - NOT be condescending or lecture-y — keep it factual and informative
+
+                ── OUTPUT FORMAT ────────────────────────────────────────────────────
+                Respond with ONLY a JSON object. No markdown, no extra text:
+
+                { "reasons": ["reason 1", "reason 2", "reason 3"] }
                 """.formatted(question, userAnswer, correctAnswer);
     }
 
